@@ -2,11 +2,12 @@
 
 require 'rosette/integrations'
 require 'grape-rollbar'
+require 'rollbar'
 
 module Rosette
   module Integrations
     class RollbarIntegration < Integration
-      autoload :Configurator,   'rosette/integrations/rollbar/configurator'
+      autoload :Configurator,   'rosette/integrations/rollbar_integration/configurator'
 
       def integrate(obj)
         if integrates_with?(obj)
@@ -25,8 +26,18 @@ module Rosette
       end
 
       def integrate_with_grape(obj)
-        obj.send(:include, GrapeRollbar)
-        obj.track_errors_with_rollbar(configuration.rollbar_notifier)
+        obj.endpoints.each do |endpoint|
+          original_block = endpoint.block
+          endpoint.block = lambda do |*args, &block|
+            begin
+              original_block.call(endpoint)
+            rescue => e
+              env = args.first.env['api.endpoint']
+              configuration.rollbar_notifier.error(e, env.params, env.headers)
+              raise e
+            end
+          end
+        end
       end
 
       def error(exception, **options)
