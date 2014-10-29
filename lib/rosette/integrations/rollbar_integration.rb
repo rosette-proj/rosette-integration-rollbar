@@ -1,6 +1,7 @@
 # encoding: UTF-8
 
 require 'rosette/integrations'
+require 'grape-rollbar'
 
 module Rosette
   module Integrations
