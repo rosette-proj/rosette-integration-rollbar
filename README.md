@@ -1,0 +1,2 @@
+rosette-integration-rollbar
+===========================
