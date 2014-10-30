@@ -69,7 +69,7 @@ module Rosette
                 original_block.call(env)
               end
 
-              if response.is_a?(Hash) && response.fetch(:status, 200) >= 400
+              if is_error_response?(response)
                 configuration.rollbar_notifier.error(
                   response.fetch(:message, {}).fetch(:error, 'Unknown error'),
                   env.params, env.headers
@@ -87,6 +87,27 @@ module Rosette
               raise e
             end
           end
+        end
+      end
+
+      def get_error_status(response)
+        if response.is_a?(Hash)
+          status = response.fetch(:status, 200)
+
+          case status
+            when String
+              status.to_i if status =~ /[\d]+/
+            when Fixnum
+              status
+          end
+        end
+      end
+
+      def is_error_response?(response)
+        if status = get_error_status(response)
+          status >= 400
+        else
+          false
         end
       end
     end
