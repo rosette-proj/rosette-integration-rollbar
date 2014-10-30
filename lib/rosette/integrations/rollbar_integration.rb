@@ -70,10 +70,12 @@ module Rosette
               end
 
               if is_error_response?(response)
-                configuration.rollbar_notifier.error(
-                  response.fetch(:message, {}).fetch(:error, 'Unknown error'),
-                  env.params, env.headers
-                )
+                if configuration.log_expected_errors?
+                  configuration.rollbar_notifier.error(
+                    response.fetch(:message, {}).fetch(:error, 'Unknown error'),
+                    env.params, env.headers
+                  )
+                end
 
                 # re-throw (we just do logging, let middleware handle this error)
                 throw :error, response
