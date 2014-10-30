@@ -11,7 +11,10 @@ module Rosette
 
       def integrate(obj)
         if integrates_with?(obj)
-          integrate_with_grape(obj) if obj.is_a?(Class)
+          integrate_with_grape(obj)
+        else
+          raise Errors::ImpossibleIntegrationError,
+            "Cannot integrate #{self.class.name} with #{obj}"
         end
       end
 
@@ -22,7 +25,7 @@ module Rosette
       end
 
       def integrates_with?(obj)
-        obj.ancestors.include?(Grape::API)
+        obj.is_a?(Class) && obj.ancestors.include?(Grape::API)
       end
 
       def error(exception, **options)
