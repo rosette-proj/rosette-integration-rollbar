@@ -36,6 +36,7 @@ module Rosette
 
       def integrate_with_grape(obj)
         obj.endpoints.each do |endpoint|
+          # Grape::Endpoint.send(:include, endpoint.send(:helpers))
           original_block = endpoint.block
 
           endpoint.block = lambda do |*args, &block|
@@ -43,7 +44,7 @@ module Rosette
 
             begin
               response = catch(:error) do
-                # Definitely counter-intuitive to pass `endpoint` to this method, but
+                # Definitely counter-intuitive to pass `env` to this method, but
                 # grape's insane metaprogramming spaghetti leaves us no choice.
                 # See: https://github.com/intridea/grape/blob/v0.9.0/lib/grape/endpoint.rb#L38
                 #
@@ -58,10 +59,14 @@ module Rosette
                 # implementation would accept the args the original endpoint method accepts,
                 # but those original args are hidden by the dynamic method re-bind. What this
                 # means is the arguments passed to the lambda here in this method (look up)
-                # ARE THE SAME EXACT ARGUMENTS that `endpoint` receives. All of this explains
-                # why we pass `endpoint` here instead of *args and &block from the above lambda.
-                # Kids: don't try this at home.
-                original_block.call(endpoint)
+                # ARE THE SAME EXACT ARGUMENTS that `env` indirectly receives. All of this explains
+                # why we pass `env` here instead of *args and &block from the above lambda. We
+                # can't pass `endpoint` because methods from `helper` blocks and parameters from
+                # `params` don't get mixed into the endpoint until the endpoint actually gets
+                # called, meaning there's a big difference in the interface between the endpoint
+                # as it's stored in `obj.endpoints` and the interface available when the endpoint
+                # gets executed. Kids: don't try this at home.
+                original_block.call(env)
               end
 
               if response.fetch(:status, 200) >= 400
