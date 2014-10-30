@@ -40,8 +40,24 @@ module Rosette
 
             begin
               response = catch(:error) do
-                # definitely counter-intuitive to pass endpoint to this method, but
-                # grape's insane metaprogramming spaghetti leaves us no choice
+                # Definitely counter-intuitive to pass `endpoint` to this method, but
+                # grape's insane metaprogramming spaghetti leaves us no choice.
+                # See: https://github.com/intridea/grape/blob/v0.9.0/lib/grape/endpoint.rb#L38
+                #
+                # Basically, grape uses define_method to construct a new method for
+                # each endpoint. It then grabs a reference to the method via a call to
+                # instance_method, which returns a ruby Method object (fyi Method objects
+                # can be dynamically bound to objects of the same type). Grape then deletes
+                # the method it just defined and returns a proc that wraps the Method object.
+                # The wrapping proc takes a single argument, which is expected to be an
+                # instance of the Endpoint class. The body of the proc binds the Method object
+                # to the passed Endpoint instance and calls it (with no arguments). Any sane
+                # implementation would accept the args the original endpoint method accepts,
+                # but those original args are hidden by the dynamic method re-bind. What this
+                # means is the arguments passed to the lambda here in this method (look up)
+                # ARE THE SAME EXACT ARGUMENTS that `endpoint` receives. All of this explains
+                # why we pass `endpoint` here instead of *args and &block from the above lambda.
+                # Kids: don't try this at home.
                 original_block.call(endpoint)
               end
 
@@ -51,13 +67,15 @@ module Rosette
                   env.params, env.headers
                 )
 
-                throw :error, response  # re-throw
+                # re-throw (we just do logging, let middleware handle this error)
+                throw :error, response
               end
 
               response
             rescue => e
-              env = args.first.env['api.endpoint']
               configuration.rollbar_notifier.error(e, env.params, env.headers)
+
+              # re-raise (we just do logging, let middleware handle this error)
               raise e
             end
           end
