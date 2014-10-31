@@ -73,7 +73,7 @@ module Rosette
                 if configuration.log_expected_errors?
                   configuration.rollbar_notifier.error(
                     response.fetch(:message, {}).fetch(:error, 'Unknown error'),
-                    env.params, env.headers
+                    get_extra_fields(env)
                   )
                 end
 
@@ -83,13 +83,23 @@ module Rosette
 
               response
             rescue => e
-              configuration.rollbar_notifier.error(e, env.params, env.headers)
+              configuration.rollbar_notifier.error(e, get_extra_fields(env))
 
               # re-raise (we just do logging, let middleware handle this error)
               raise e
             end
           end
         end
+      end
+
+      def get_extra_fields(endpoint)
+        { headers: endpoint.headers, params: get_params(endpoint) }
+      end
+
+      def get_params(endpoint)
+        endpoint.request.params.dup.tap { |hash| hash.delete('route_info') }.to_h
+      rescue NoMethodError
+        {}
       end
 
       def get_error_status(response)
