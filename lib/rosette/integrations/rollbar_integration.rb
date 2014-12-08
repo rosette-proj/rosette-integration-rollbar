@@ -7,14 +7,21 @@ module Rosette
   module Integrations
 
     class RollbarIntegration < Integration
-      autoload :Configurator, 'rosette/integrations/rollbar_integration/configurator'
+      autoload :Configurator,         'rosette/integrations/rollbar_integration/configurator'
+      autoload :RollbarErrorReporter, 'rosette/integrations/rollbar_integration/rollbar_error_reporter'
 
       def integrate(obj)
-        if integrates_with?(obj)
-          integrate_with_grape(obj)
-        else
+        unless integrates_with?(obj)
           raise Errors::ImpossibleIntegrationError,
             "Cannot integrate #{self.class.name} with #{obj}"
+        end
+
+        if integrates_with_grape?(obj)
+          integrate_with_grape(obj)
+        end
+
+        if integrates_with_configurator?(obj)
+          integrate_with_configurator(obj)
         end
       end
 
@@ -25,7 +32,7 @@ module Rosette
       end
 
       def integrates_with?(obj)
-        obj.is_a?(Class) && obj.ancestors.include?(Grape::API)
+        integrates_with_grape?(obj) || integrates_with_configurator?(obj)
       end
 
       def error(exception, **options)
@@ -33,6 +40,20 @@ module Rosette
       end
 
       private
+
+      def integrates_with_grape?(obj)
+        obj.is_a?(Class) && obj.ancestors.include?(Grape::API)
+      end
+
+      def integrates_with_configurator?(obj)
+        obj.is_a?(Rosette::Core::Configurator)
+      end
+
+      def integrate_with_configurator(obj)
+        obj.use_error_reporter(
+          RollbarErrorReporter.new(configuration.rollbar_notifier)
+        )
+      end
 
       def integrate_with_grape(obj)
         obj.endpoints.each do |endpoint|
