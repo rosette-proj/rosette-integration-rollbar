@@ -14,6 +14,10 @@ module Rosette
         def report_error(error, options = {})
           rollbar_notifier.error(error, options)
         end
+
+        def report_warning(error, options = {})
+          rollbar_notifier.warn(error, options)
+        end
       end
 
     end
