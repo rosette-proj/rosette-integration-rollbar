@@ -9,6 +9,7 @@ module Rosette
     class RollbarIntegration < Integration
       autoload :Configurator,         'rosette/integrations/rollbar_integration/configurator'
       autoload :RollbarErrorReporter, 'rosette/integrations/rollbar_integration/rollbar_error_reporter'
+      autoload :JavaException,        'rosette/integrations/rollbar_integration/java_exception'
 
       def integrate(obj)
         unless integrates_with?(obj)
