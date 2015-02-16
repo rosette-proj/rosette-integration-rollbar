@@ -16,7 +16,7 @@ module Rosette
         end
 
         def message
-          exception.message
+          "<#{exception.class}> #{exception.message}"
         end
       end
 
