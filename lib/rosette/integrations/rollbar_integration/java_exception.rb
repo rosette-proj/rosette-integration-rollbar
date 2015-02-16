@@ -11,12 +11,12 @@ module Rosette
           @exception = exception
         end
 
-        def method_missing(method, *args, &block)
-          exception.send(method, *args, &block)
+        def backtrace
+          exception.backtrace
         end
 
-        def respond_to_missing?(method, include_private = false)
-          exception.respond_to?(method, include_private)
+        def message
+          exception.message
         end
       end
 
