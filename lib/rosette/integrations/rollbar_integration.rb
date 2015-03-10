@@ -36,7 +36,7 @@ module Rosette
         integrates_with_grape?(obj) || integrates_with_configurator?(obj)
       end
 
-      def error(exception, **options)
+      def error(exception, options = {})
         configuration.rollbar_notifier.error(exception, options)
       end
 
