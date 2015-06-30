@@ -1,6 +1,6 @@
 # encoding: UTF-8
 
-require 'rosette-core'
+require 'rosette/core'
 
 module Rosette
   module Integrations
