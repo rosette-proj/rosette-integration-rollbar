@@ -1,10 +1,12 @@
 # encoding: UTF-8
 
+require 'rosette-core'
+
 module Rosette
   module Integrations
     class RollbarIntegration < Integration
 
-      class RollbarErrorReporter
+      class RollbarErrorReporter < Rosette::Core::ErrorReporter
         attr_reader :rollbar_notifier
 
         def initialize(rollbar_notifier)
