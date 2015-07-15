@@ -40,7 +40,7 @@ end
 
 Now that the integration has been configured, the Rosette error reporter will be set to an instance of `Rosette::Integrations::RollbarIntegration::RollbarErrorReporter`, and can be used like any error reporter:
 
-```
+```ruby
 begin
   raise StandardError, 'Something went wrong'
 rescue => e
