@@ -1,7 +1,6 @@
 # encoding: UTF-8
 
 require 'rosette/integrations'
-require 'rollbar'
 
 module Rosette
   module Integrations
